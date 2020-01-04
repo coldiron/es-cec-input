@@ -119,7 +119,8 @@ def get_key_bindings(ra_cfg):
     with open(ra_cfg, 'r') as fp:
         for line in fp:
             if 'input_player1_' in line and '#' not in line and\
-                    '_analog_dpad_mode' not in line:
+                    '_analog_dpad_mode' not in line and\
+                    '_joypad_index' not in line:
                 keys.append(line.split('=')[1][2:-2])
     return keys
 
@@ -139,39 +140,40 @@ def press_keys(line, device, keylist):
     # check for key released as pressed was displaying duplicate
     # presses on the remote control used for development
 
+    # TODO: change keylist[] to a dictionary and remove hard references to my custom keymap
     if "released" in line:
 
         # Select
         if "rewind" in line or "yellow" in line:
-            device.emit_click(keylist[5])
+            device.emit_click(uinput.KEY_BACKSPACE)
 
         # Start
         elif "Fast forward" in line or "blue" in line:
-            device.emit_click(keylist[4])
+            device.emit_click(uinput.KEY_ENTER)
 
         # Left on DPAD
         elif "left" in line:
-            device.emit_click(keylist[8])
+            device.emit_click(uinput.KEY_LEFT)
 
         # Right on DPAD
         elif "right" in line:
-            device.emit_click(keylist[9])
+            device.emit_click(uinput.KEY_RIGHT)
 
         # Up on DPAD
         elif "up" in line:
-            device.emit_click(keylist[10])
+            device.emit_click(uinput.KEY_UP)
 
         # Down on DPAD
         elif "down" in line:
-            device.emit_click(keylist[11])
+            device.emit_click(uinput.KEY_DOWN)
 
         # A Button
         elif "select" in line or "red" in line:
-            device.emit_click(keylist[0])
+            device.emit_click(uinput.KEY_A)
 
         # B Button
-        elif "exit" in line or "green" in line:
-            device.emit_click(keylist[1])
+        elif "exit" in line or "green" or "back" in line:
+            device.emit_click(uinput.KEY_B)
 
         # Uncomment the prinnt statement below to display remote output
         # print line
@@ -202,10 +204,9 @@ def main():
             if idle:
 
                 # start cec-client with "as" and exit to initialize some older TVs to send the remote presses
-				print subprocess.call("echo as | cec-client -s", shell=True)
+                print subprocess.call("echo as | cec-client -d 1 -s", shell=True)
                 # start cec-client to track pressed buttons on remote
-                p = subprocess.Popen(
-                        'cec-client', stdout=subprocess.PIPE, bufsize=1)
+                p = subprocess.Popen('cec-client', stdout=subprocess.PIPE, bufsize=1)
                 lines = iter(p.stdout.readline, b'')
 
                 idle = False
